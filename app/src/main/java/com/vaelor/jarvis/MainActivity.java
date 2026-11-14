@@ -178,7 +178,7 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private int dp(int n) { return (int)(n * getResources().getDisplayMetrics().density + 0.5f); }
+    private int dp(int n) { return dp((float)n); }\n    private int dp(float n) { return (int)(n * getResources().getDisplayMetrics().density + 0.5f); }
     private void setStatus(String s) { if (status != null) status.setText(s); }
 
     private class OrbView extends View {
