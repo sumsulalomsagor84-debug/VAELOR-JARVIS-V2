@@ -178,9 +178,8 @@ public class MainActivity extends Activity {
         } else if (normalized.contains("গুগলে সার্চ") || normalized.contains("google search") || normalized.startsWith("search ")) {
             String query = command.replace("গুগলে সার্চ করো", "")
                     .replace("গুগলে সার্চ কর", "")
-                    .replace("Google search", "")
-                    .replace("google search", "")
-                    .replaceFirst("(?i)^search\\\\s*", "").trim();
+                    .replaceAll("(?i)google search", "")
+                    .replaceFirst("(?i)^search\\s*", "").trim();
             if (query.isEmpty()) {
                 reply("কী বিষয়ে সার্চ করব? বিষয়টি লিখে আবার কমান্ড চালান।");
             } else {
