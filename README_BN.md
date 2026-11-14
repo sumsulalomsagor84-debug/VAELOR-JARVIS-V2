@@ -1,4 +1,4 @@
-# VAELOR JARVIS V2 — Android Speech + Local Commands
+# J.A.R.V.I.S. V2 — Android Speech + Local Commands
 
 বাংলা-প্রধান Android assistant-এর native Java foundation (0.5.0)।
 
@@ -17,3 +17,12 @@
 
 ## APK
 GitHub → Actions → Android APK Build → সর্বশেষ সফল run → Artifacts থেকে VAELOR-JARVIS-debug-apk ZIP ডাউনলোড করে extract করুন; ভেতরের app-debug.apk ইনস্টল করুন।
+
+## সংস্করণ 0.7.0 — Voice ও Chat Mode
+- অ্যাপের Launcher নাম: J.A.R.V.I.S.
+- Voice ও Chat Mode-এর মধ্যে পরিবর্তন করা যায়।
+- একই স্ক্রিনে Voice Mode-এর সঙ্গে কথার Transcript দেখানোর ব্যবস্থা যোগ হয়েছে।
+- ভয়েস কমান্ড: “চ্যাট মোডে যাও”, “ভয়েস মোডে যাও”, “স্ক্রিনে লেখা দেখাও”, “লেখা লুকাও”।
+- টাইপ করা বার্তা Chat Mode-এ কথোপকথনের মতো দেখায়।
+- AI Brain এখনো সংযুক্ত হয়নি; অজানা প্রশ্নে অ্যাপ স্পষ্টভাবে এই সীমাবদ্ধতা জানায়।
+- Wake Word এখনো ইচ্ছাকৃতভাবে পরে রাখা হয়েছে।
