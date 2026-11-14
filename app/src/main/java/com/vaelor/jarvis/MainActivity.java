@@ -270,7 +270,6 @@ public class MainActivity extends Activity {
     private void respond(String answer,boolean spoken){
         setStatus(answer);
         if(voiceEnabled)speak(answer);
-        if(chatMode&&!spoken)addBubble("J.A.R.V.I.S.",answer,false);
     }
     private void openApp(String pkg,String fallback){
         try{Intent i=getPackageManager().getLaunchIntentForPackage(pkg);if(i!=null)startActivity(i);else if(fallback!=null)startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(fallback)));else Toast.makeText(this,"অ্যাপটি ইনস্টল করা নেই।",Toast.LENGTH_SHORT).show();}
