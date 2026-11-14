@@ -2,6 +2,7 @@ package com.vaelor.jarvis;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -19,6 +20,7 @@ import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
+import android.text.InputType;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.content.Context;
@@ -29,6 +31,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.graphics.drawable.GradientDrawable;
 import android.widget.Toast;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,6 +47,7 @@ public class MainActivity extends Activity {
     private ScrollView transcriptScroll;
     private SpeechRecognizer recognizer;
     private OrbView orb;
+    private final JSONArray aiHistory = new JSONArray();
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
@@ -125,7 +130,7 @@ public class MainActivity extends Activity {
         composer.addView(actions,new LinearLayout.LayoutParams(-1,dp(44)));
 
         TextView plus=control("＋"); actions.addView(plus,new LinearLayout.LayoutParams(dp(42),-1));
-        plus.setOnClickListener(v->Toast.makeText(this,"অতিরিক্ত টুল পরবর্তী সংস্করণে আসবে।",Toast.LENGTH_SHORT).show());
+        plus.setText("⚙"); plus.setOnClickListener(v->openAiSettings());
 
         TextView search=control("◎"); actions.addView(search,new LinearLayout.LayoutParams(dp(42),-1));
         search.setOnClickListener(v->{String q=input.getText().toString().trim();if(!q.isEmpty())searchWeb(q);else setStatus("সার্চের বিষয় লিখুন।");});
@@ -242,11 +247,82 @@ public class MainActivity extends Activity {
         }
         String answer=localCommand(n,message);
         if(answer==null){
-            answer="তোমার কথা বুঝেছি। কিন্তু পূর্ণ Hybrid AI Brain এখনো সংযুক্ত হয়নি। এই সংস্করণে স্থানীয় কমান্ডগুলো কাজ করে; পরের ধাপে নিরাপদ Free AI connection যোগ করব।";
+            askAi(message,fromVoice);
+            return;
         }
         respond(answer,fromVoice);
         if(fromVoice&&showTranscript){addBubble("তুমি",message,true);addBubble("J.A.R.V.I.S.",answer,false);}
         else if(!fromVoice)addBubble("J.A.R.V.I.S.",answer,false);
+    }
+
+    private void askAi(String message, boolean fromVoice){
+        if(fromVoice && showTranscript) addBubble("তুমি",message,true);
+        setStatus("Free AI providers-এর সঙ্গে সংযোগ করছি…");
+        try{
+            aiHistory.put(new JSONObject().put("role","user").put("content",message));
+            while(aiHistory.length()>18) aiHistory.remove(0);
+            JSONArray requestMessages=new JSONArray();
+            requestMessages.put(new JSONObject().put("role","system").put("content",
+                "You are J.A.R.V.I.S., a Bengali-first personal AI assistant. Address the user as Captain VAELOR. Reply naturally in Bengali unless another language is requested. Be accurate, explain uncertainty, never invent facts, and keep answers concise unless detail is requested. You may help with study, reasoning, coding, planning and everyday questions. Do not claim to control the phone or perform actions unless the Android app explicitly confirms that action."));
+            for(int i=0;i<aiHistory.length();i++) requestMessages.put(aiHistory.getJSONObject(i));
+            AiApiClient.chat(this,requestMessages,new AiApiClient.Callback(){
+                @Override public void onSuccess(String answer,String provider){
+                    try{aiHistory.put(new JSONObject().put("role","assistant").put("content",answer));}
+                    catch(Exception ignored){}
+                    setStatus("উত্তর এসেছে: "+provider);
+                    if(!fromVoice || showTranscript) addBubble("J.A.R.V.I.S. · "+provider,answer,false);
+                    if(voiceEnabled) speak(answer);
+                }
+                @Override public void onFailure(String error){
+                    String message="AI সংযোগ হয়নি: "+error;
+                    setStatus(message);
+                    if(!fromVoice || showTranscript) addBubble("J.A.R.V.I.S.",message,false);
+                    if(voiceEnabled) speak(message);
+                }
+            });
+        }catch(Exception e){
+            setStatus("AI request তৈরি করা যায়নি: "+e.getMessage());
+        }
+    }
+
+    private void openAiSettings(){
+        LinearLayout panel=new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(18),dp(8),dp(18),dp(4));
+
+        TextView urlLabel=label("Cloudflare Worker URL (https://…workers.dev)",12,0xFFB8B8C4);
+        panel.addView(urlLabel);
+        EditText urlField=new EditText(this);
+        urlField.setSingleLine(true);
+        urlField.setText(AiApiClient.getWorkerUrl(this));
+        urlField.setHint("https://your-worker.your-subdomain.workers.dev");
+        panel.addView(urlField,new LinearLayout.LayoutParams(-1,-2));
+
+        TextView tokenLabel=label("Gateway Token (API key নয়)",12,0xFFB8B8C4);
+        tokenLabel.setPadding(0,dp(12),0,0);
+        panel.addView(tokenLabel);
+        EditText tokenField=new EditText(this);
+        tokenField.setSingleLine(true);
+        tokenField.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        tokenField.setText(AiApiClient.getGatewayToken(this));
+        tokenField.setHint("Cloudflare Worker secret");
+        panel.addView(tokenField,new LinearLayout.LayoutParams(-1,-2));
+
+        new AlertDialog.Builder(this)
+            .setTitle("J.A.R.V.I.S. AI Gateway")
+            .setMessage("Provider API keys এখানে লিখবে না। শুধু Worker URL ও Gateway Token দেবে।")
+            .setView(panel)
+            .setNegativeButton("Cancel",null)
+            .setPositiveButton("Save",(dialog,which)->{
+                String endpoint=urlField.getText().toString().trim();
+                String token=tokenField.getText().toString().trim();
+                if(!endpoint.startsWith("https://") || token.length()<16){
+                    Toast.makeText(this,"সঠিক HTTPS Worker URL এবং অন্তত ১৬ অক্ষরের Token দাও।",Toast.LENGTH_LONG).show();
+                    return;
+                }
+                AiApiClient.saveConfig(this,endpoint,token);
+                Toast.makeText(this,"AI Gateway settings সংরক্ষিত হয়েছে।",Toast.LENGTH_SHORT).show();
+            }).show();
     }
 
     private String localCommand(String n,String original){
@@ -261,7 +337,6 @@ public class MainActivity extends Activity {
         if(n.contains("সময়")||n.contains("কয়টা বাজে")||n.contains("কটা বাজে")||n.contains("time"))return "এখন সময় "+new SimpleDateFormat("hh:mm a",new Locale("bn","BD")).format(new Date())+"।";
         if(n.contains("তারিখ")||n.contains("date"))return "আজ "+new SimpleDateFormat("EEEE, dd MMMM yyyy",new Locale("bn","BD")).format(new Date())+"।";
         if(n.contains("হ্যালো")||n.contains("hello")||n.equals("hi"))return "হ্যালো Captain VAELOR। আমি শুনছি।";
-        if(n.contains("পড়াশোনা")||n.contains("পড়াশোনা")||n.contains("study"))return "Study Mode খুলতে পারি, তবে পূর্ণ AI Tutor এখনো সংযুক্ত হয়নি।";
         return null;
     }
 
