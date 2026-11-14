@@ -8,7 +8,7 @@
 ## 2. Speech ও TTS
 1. অ্যাপ খুলে মাইক্রোফোন বোতাম চাপুন এবং Microphone permission দিন।
 2. বলুন: “আজকের আবহাওয়া কেমন”। লেখা ঠিক এসেছে কি না দেখুন।
-3. ইনপুটে লিখুন: “হ্যালো Captain VAELOR, আমি VAELOR JARVIS।”
+3. ইনপুটে লিখুন: “হ্যালো Captain VAELOR, আমি J.A.R.V.I.S.।”
 4. Speak চাপুন। বাংলা কণ্ঠ শোনা গেলে TTS কাজ করছে।
 5. Voice Output Off করে Speak চাপুন; শব্দ হওয়া উচিত নয়।
 
@@ -18,3 +18,16 @@
 
 ## রিপোর্ট
 Device model, Android version, Speech result, TTS result, প্রতিটি command result ও error লিখে রাখুন। Remote build সফল হলেই device test সম্পন্ন হয় না।
+
+## 0.7.0 — Voice/Chat Mode manual test
+- [ ] Launcher label shows J.A.R.V.I.S.
+- [ ] VOICE and CHAT buttons switch modes.
+- [ ] Tapping the message field opens Chat Mode and keyboard.
+- [ ] Typed message appears once; local command response appears once.
+- [ ] Microphone captures Bengali speech.
+- [ ] “চ্যাট মোডে যাও” switches to Chat Mode.
+- [ ] “ভয়েস মোডে যাও” returns to Voice Mode.
+- [ ] “স্ক্রিনে লেখা দেখাও” displays transcript while voice orb remains visible.
+- [ ] “লেখা লুকাও” hides transcript.
+- [ ] Voice output toggle mutes/unmutes speech.
+- [ ] Unknown general questions clearly report that the AI Brain is not connected yet.
