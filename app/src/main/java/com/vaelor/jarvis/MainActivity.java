@@ -106,8 +106,7 @@ public class MainActivity extends Activity {
         transcriptList=new LinearLayout(this); transcriptList.setOrientation(LinearLayout.VERTICAL);
         transcriptList.setPadding(dp(4),dp(10),dp(4),dp(10));
         transcriptScroll.addView(transcriptList);
-        FrameLayout.LayoutParams tlp=new FrameLayout.LayoutParams(-1,-1);
-        stage.addView(transcriptScroll,tlp);
+        centerArea.addView(transcriptScroll,new LinearLayout.LayoutParams(-1,0,1));
         transcriptScroll.setVisibility(View.GONE);
 
         LinearLayout composer=new LinearLayout(this); composer.setOrientation(LinearLayout.VERTICAL);
@@ -157,8 +156,7 @@ public class MainActivity extends Activity {
         }else{
             transcriptScroll.setVisibility(showTranscript?View.VISIBLE:View.GONE);
             orb.setVisibility(View.VISIBLE); status.setVisibility(View.VISIBLE);
-            ((FrameLayout)orb.getParent()).bringChildToFront(centerArea);
-            if(showTranscript)transcriptScroll.bringToFront();
+            if(showTranscript)transcriptScroll.setVisibility(View.VISIBLE);
         }
     }
 
