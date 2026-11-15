@@ -1,6 +1,6 @@
-name = "vaelor-jarvis-ai"
+name = "vaelor-jarvis-gateway"
 main = "worker.js"
-compatibility_date = "2026-11-14"
+compatibility_date = "2026-11-15"
 workers_dev = true
 
 [ai]
