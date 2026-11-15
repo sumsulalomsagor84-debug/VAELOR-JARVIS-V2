@@ -1,43 +1,39 @@
-# J.A.R.V.I.S. — Free AI Failover Gateway
+# J.A.R.V.I.S. — Cloud AI Failover Gateway
 
-এই Backend J.A.R.V.I.S.-এর জন্য একাধিক **ফ্রি-টিয়ার** AI provider ধারাবাহিকভাবে ব্যবহার করে।
+## Cloudflare deployment status
+- <badge>Worker deployed</badge> Worker name: `vaelor-jarvis-gateway`
+- URL: `https://vaelor-jarvis-gateway.workers.dev`
+- Health endpoint: `GET /health` (deployment exists; live endpoint check still pending)
+- Chat endpoint: `POST /v1/chat`
+- Workers AI binding: `AI`
+- Required Worker secret: `GATEWAY_TOKEN` (configured; never commit its value)
+- Worker source: `backend/worker.js`
 
-## Provider order
+## Automatic provider order
+1. **Groq** — `openai/gpt-oss-120b`; skipped until `GROQ_API_KEY` is added as a Cloudflare Worker secret.
+2. **Cloudflare Workers AI** — `@cf/meta/llama-3.3-70b-instruct-fp8-fast`; AI binding is deployed.
+3. **OpenRouter Free** — `openrouter/free`; skipped until `OPENROUTER_API_KEY` is added as a Cloudflare Worker secret.
 
-1. Groq — `openai/gpt-oss-120b` (শুধু Groq-এর free account quota)
-2. Cloudflare Workers AI — `@cf/openai/gpt-oss-20b` (Workers AI free daily allocation)
-3. OpenRouter — `openrouter/free` (শুধু free model router)
+A provider error, rate limit, exhausted quota, or empty response triggers the next provider. If every configured provider fails, the gateway returns HTTP 503. The Worker does not intentionally select paid models.
 
-একটি provider quota শেষ করলে বা সাময়িকভাবে unavailable হলে পরের provider-এ চেষ্টা করে। সবগুলো ব্যর্থ হলে 503 দেয়; **কোনো paid model বা paid fallback নির্বাচন করে না**।
+## Free-use and billing safety
+- Cloudflare Workers AI has a free daily allocation, currently documented as 10,000 Neurons/day. Limits and pricing may change.
+- This Worker does not enforce an independent hard spending cap yet. Do not enable a paid Workers plan or paid usage. Before enabling AI inference, verify the Cloudflare account remains on the Free plan and check its billing settings.
+- Groq and OpenRouter keys are not configured yet. Do not paste provider keys into ChatGPT, the Android app, or GitHub; add them only under Cloudflare Worker → Settings → Variables and Secrets.
+- No AI inference request has been sent during deployment, so no model usage was consumed by the deployment step.
 
-> Free quota, model availability ও rate limit provider-রা যেকোনো সময় বদলাতে পারে। Free tier মানে সীমাহীন ব্যবহার নয়। Cloudflare-এর Workers AI Free allocation বর্তমানে 10,000 Neurons/day; Workers Free plan-এ সীমা পার হলে inference বন্ধ হয়। Paid Workers plan চালু করা যাবে না। OpenRouter free variants বর্তমানে 50 requests/day ও 20 requests/minute সীমায় থাকতে পারে। Groq-এর সঠিক সীমা account-এর Limits page-এ দেখতে হবে।
+## Android configuration
+In J.A.R.V.I.S. open AI Gateway settings:
+- Worker URL: `https://vaelor-jarvis-gateway.workers.dev`
+- Gateway Token: use the private token supplied in the current ChatGPT conversation.
 
-## Security
+The Gateway Token is not a provider API key. It is a credential for this personal Worker endpoint. Because APK contents and app preferences can potentially be extracted from a rooted/compromised device, treat it as a basic access barrier, not perfect authentication. Rotate the Worker secret if exposed.
 
-- Provider API keys কেবল Cloudflare Worker Secrets-এ থাকবে; Android APK বা GitHub source-এ নয়।
-- `JARVIS_GATEWAY_TOKEN` আবশ্যক। Worker এটি ছাড়া chat request গ্রহণ করে না।
-- Android app-এ gateway token দিতে হবে; এটিকে provider API key-এর সঙ্গে গুলিয়ে ফেলবে না।
-- Chat history Worker-এ সংরক্ষণ হয় না; app প্রতিটি অনুরোধে সাম্প্রতিক messages পাঠায়।
-- Personal-use gateway token APK থেকে বের করা সম্ভব হতে পারে; তাই এটি একক-ব্যবহারকারীর basic barrier, পূর্ণ authentication নয়। Token ফাঁস হলে Cloudflare dashboard থেকে secret rotate করতে হবে।
-
-## Deploy (Cloudflare Dashboard / Wrangler)
-
-1. Cloudflare account-এ Workers & Pages খুলে Worker তৈরি করো।
-2. এই ফোল্ডারের Worker source deploy করো; `wrangler.toml`-এ Workers AI binding আগে থেকেই আছে।
-3. Worker → Settings → Variables and Secrets → Add secret:
-   - `JARVIS_GATEWAY_TOKEN` — নিজে তৈরি করা লম্বা random token
-   - `GROQ_API_KEY` — Groq key (optional; না থাকলে skip হবে)
-   - `OPENROUTER_API_KEY` — OpenRouter key (optional; না থাকলে skip হবে)
-4. Workers AI binding-এ `AI` নামটি সক্রিয় আছে নিশ্চিত করো।
-5. Cloudflare **Workers Free** plan-এই থাকো; Paid plan বা billing upgrade করবে না।
-6. Deploy শেষে `https://<worker-name>.<subdomain>.workers.dev/health` খুলে provider flags দেখো।
-
-## API
-
+## API format
 POST `/v1/chat`
 
 Headers:
-- `Authorization: Bearer <JARVIS_GATEWAY_TOKEN>`
+- `Authorization: Bearer <GATEWAY_TOKEN>`
 - `Content-Type: application/json`
 
 Body:
@@ -50,8 +46,11 @@ Body:
 }
 ```
 
-Successful response contains `answer`, `provider`, `model`, and `fallback_used`.
+Successful response contains `ok`, `answer`, and `provider`.
 
-## Important
-
-এই commit শুধু Backend source প্রস্তুত করে। Worker deploy, secrets configure, Android app-এর endpoint/token settings, live provider tests এবং APK build/device test এখনো বাকি। কোনো API key GitHub-এ commit করবে না, ChatGPT-তে পাঠাবে না।
+## Remaining verification
+- Add Groq and OpenRouter free-tier secrets (optional).
+- Verify the /health endpoint from a browser.
+- Configure the Android app with the Worker URL and Gateway Token.
+- Run a controlled AI request after confirming billing is Free-only.
+- Build APK and test on the TECNO device.
