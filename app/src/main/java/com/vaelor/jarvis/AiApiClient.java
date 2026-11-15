@@ -34,7 +34,7 @@ public final class AiApiClient {
     }
 
     public static String getWorkerUrl(Context context) {
-        return prefs(context).getString(KEY_URL, "");
+        return prefs(context).getString(KEY_URL, "https://vaelor-jarvis-gateway.workers.dev");
     }
 
     public static String getGatewayToken(Context context) {
