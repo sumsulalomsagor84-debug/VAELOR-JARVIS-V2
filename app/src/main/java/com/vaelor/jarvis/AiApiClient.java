@@ -66,7 +66,7 @@ public final class AiApiClient {
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("POST");
                 connection.setConnectTimeout(15000);
-                connection.setReadTimeout(50000);
+                connection.setReadTimeout(90000);
                 connection.setDoOutput(true);
                 connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 connection.setRequestProperty("Accept", "application/json");
