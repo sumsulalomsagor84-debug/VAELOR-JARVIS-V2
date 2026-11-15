@@ -6,7 +6,7 @@ const cors = {
 };
 const json = (data, status=200) => new Response(JSON.stringify(data), {status, headers:cors});
 function authorized(request, secret) {
-  const got = (request.headers.get("Authorization") || "").replace(/^Bearer\\s+/i, "");
+  const got = (request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!secret || got.length !== secret.length) return false;
   let diff = 0;
   for (let i=0;i<got.length;i++) diff |= got.charCodeAt(i) ^ secret.charCodeAt(i);
